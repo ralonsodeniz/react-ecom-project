@@ -1,0 +1,4 @@
+/* To add a font we first go to google fonts and copy the html link and we put it in the index.htmnl and then we set the font as font-family in the element we want, in this case the body */
+body {
+  font-family: "Open Sans Condensed", sans-serif;
+}
