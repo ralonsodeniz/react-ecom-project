@@ -46,10 +46,9 @@ class Directory extends Component {
   render() {
     return (
       <div className="directory-menu">
-        {this.state.section.map(({ title, id, imageUrl, size }) => {
-          return (
-            <MenuItem key={id} title={title} imageUrl={imageUrl} size={size} />
-          );
+        {this.state.section.map(({ id, ...otherSectionProps }) => {
+          // this is the same as {id, title, imageUrl, size, linkUrl} but using Object spread operator | keep in mind that for this to be possible the names of the consts has to be the same of the properties
+          return <MenuItem key={id} {...otherSectionProps} />; // we don't spread id because we do not need it in the children but in the declaration of the component to give it a key since we are mapping components through an array
         })}
       </div>
     );
