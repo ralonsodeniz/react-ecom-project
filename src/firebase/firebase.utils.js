@@ -13,6 +13,32 @@ const config = {
   appId: process.env.REACT_APP_FIREBASE_APPID
 };
 
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+  // this is the function we are going to use to crete the users profiles in the db
+  if (!userAuth) return; // if there is not user we quit the function
+
+  const userRef = firestore.doc(`users/${userAuth.uid}`); // we create the documentRef
+  const snapShot = await userRef.get(); // we create the documentSnapshot
+
+  if (!snapShot.exists) {
+    // we check in the snapshot if the user already exists, if it doesn't we create one
+    const { displayName, email } = userAuth; // we get the name and email from the google user obejct
+    const createdAt = new Date(); // we create the date of registering
+    try {
+      await userRef.set({
+        // we use the documentRef to create the new document in the collection with its properties
+        displayName,
+        email,
+        createdAt,
+        ...additionalData
+      });
+    } catch (error) {
+      console.log("error creating user", error.message);
+    }
+  }
+  return userRef; // we may want to use this user reference after
+};
+
 firebase.initializeApp(config); // we initialize the App using the config object
 
 export const auth = firebase.auth(); // we start to config the auth process

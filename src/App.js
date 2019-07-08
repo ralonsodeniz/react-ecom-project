@@ -4,7 +4,7 @@ import HomePage from "./pages/homepage/homepage.component";
 import ShopPage from "./pages/shop/shop.component";
 import Header from "./components/header/header.component";
 import SignInAndUpPage from "./pages/sign-in-and-up/sign-in-and-up.component";
-import { auth } from "./firebase/firebase.utils"; // we need this to make our app aware of a google auth process
+import { auth, createUserProfileDocument } from "./firebase/firebase.utils"; // we need this to make our app aware of a google auth process
 import "./App.css";
 
 class App extends Component {
@@ -20,31 +20,34 @@ class App extends Component {
   unsubscribeFromAuth = null;
 
   componentDidMount() {
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-      // this is a method in the auth library that registers when a user changes in the firebase auth
-      this.setState({ currentUser: user }); // from the user authentication object we get we focus on displayName and email
-      console.log(user);
+    // this is a method in the auth library that registers when a user changes in the firebase auth
+    // it's going to be a async since we potentially have to do api calls to our db to get the users registered
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      // here we execute auth.onAuthStateChanged() and store what it returns
+      if (userAuth) {
+        // we check if t he userAuth object is not null
+        const userRef = await createUserProfileDocument(userAuth); // we save the returned userRef object from the firestore with the id of the user that has loggedin
+        userRef.onSnapshot(snapShot => {
+          // onSnapshot adds a listener for documentSnapshot and triggers an action when it happens
+          this.setState(
+            {
+              currentUser: {
+                id: snapShot.id, // we get the id of the registered user from the documentSnapshot
+                ...snapShot.data() // since the properties of the docuemnt are not in the documentSnapshot we get them with the .data() method of documentSnapshot and we spread it into the currentUser object from the state
+              }
+            },
+            () => console.log(this.state)
+          );
+        });
+      } else {
+        this.setState({ currentUser: userAuth }); // if the user logs out or it is null because any other reason we set the currentUser to null (we know in this case userAuth is going to be null)
+      }
     });
   }
 
   componentWillUnmount() {
-    this.unsubscribeFromAuth();
+    this.unsubscribeFromAuth(); // and then we use it in the componentWillUnmount to close the subscription
   }
-
-  // this is the same as above
-  //   subscribeAndUnsubscribeFromAuth = () =>
-  //   auth.onAuthStateChanged(user => {
-  //     this.setState({ currentUser: user });
-  //     console.log(user);
-  //   });
-
-  // componentDidMount() {
-  //   this.subscribeAndUnsubscribeFromAuth();
-  // }
-
-  // componentWillUnmount() {
-  //   this.subscribeAndUnsubscribeFromAuth();
-  // }
 
   render() {
     return (
